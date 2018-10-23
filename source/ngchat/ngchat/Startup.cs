@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using ngchat.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ngchat.Hubs;
 
 namespace ngchat {
     public class Startup {
@@ -36,6 +37,8 @@ namespace ngchat {
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,6 +61,10 @@ namespace ngchat {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
+            });
+
+            app.UseSignalR(routes => {
+                routes.MapHub<CommonChatHub>("/commonChatHub");
             });
         }
     }
