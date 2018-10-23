@@ -39,6 +39,7 @@ namespace ngchat {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddSignalR();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,6 +67,7 @@ namespace ngchat {
             app.UseSignalR(routes => {
                 routes.MapHub<CommonChatHub>("/commonChatHub");
             });
+
         }
     }
 }
