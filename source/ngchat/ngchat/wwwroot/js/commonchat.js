@@ -10,6 +10,13 @@ connection.on("ReceiveMessage", function (user, message) {
     document.getElementById("messagesList").appendChild(li);
 });
 
+connection.on("ReceiveConnected", function (user) {
+    var li = document.createElement("li");
+    li.textContent = user;
+    document.getElementById("onlineList").appendChild(li);
+});
+
+
 connection.start().catch(function (err) {
     return console.error(err.toString());
 });
