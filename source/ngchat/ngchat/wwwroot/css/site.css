@@ -28,6 +28,61 @@ body {
     margin: 15px;
 }
 
+.online-users-block {
+    position: fixed;
+    top: 100px;
+    left: 100px;
+    width: 20%;
+    height: 100%;
+}
+
+.messages-container {
+    margin-left: 20%;
+    height: 100%;
+    position: relative;
+    width: 80%;
+    margin-top: 60px;
+    margin-bottom: 120px;
+}
+
+.message-block {
+    width: 700px;
+    padding: 15px 40px;
+    margin-bottom: 5px;
+    background-color: #dae9f4;
+    border-radius: 5px 5px;
+}
+
+.send-block {
+    margin: auto;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    width: 450px;
+    background-color: #e3dede;
+    border-radius: 5px 5px;
+}
+
+.send-block-parent {
+    position: fixed;
+    left: 0px;
+    width: 100%;
+    bottom: 3px;
+}
+
+
+.username {
+    font-size: 11pt;
+    color: #7AA2CE;
+}
+
+.message {
+    font-size: 11pt;
+    color: rgba(0,0,0, 0.7);
+    margin: 5px 0px 0px 0px;
+}
+
 /* Hide/rearrange for smaller screens */
 @media screen and (max-width: 767px) {
     /* Hide captions */

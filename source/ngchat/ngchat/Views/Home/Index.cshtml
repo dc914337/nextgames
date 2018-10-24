@@ -2,37 +2,33 @@
     ViewData["Title"] = "Home Page";
 }
 
-$(document).ready();
+
+
 <div class="chat">
-    <div class="container">
-        <div class="row">&nbsp;</div>
-        <div class="row">
-            <div class="col-6">&nbsp;</div>
-            <div class="col-6">
-                Message: <input type="text" id="messageInput" />
-                <input type="button" id="sendButton" value="Send Message" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <hr />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-6">&nbsp;</div>
-            <div class="col-6">
-                <ul id="messagesList"></ul>
-            </div>
+
+    <div class="messages-container">
+        <h2>The Wall:</h2>
+    </div>
+
+
+    <div class="online-users-block">
+        <h3>Users online:</h3>
+        <div id="online-users">
+
         </div>
     </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-6">&nbsp;</div>
-            <div class="col-6">
-                <ul id="onlineList"></ul>
-            </div>
+
+    <div class="send-block-parent">
+        <div class="send-block">
+            <div>Message:</div>
+            <textarea rows="4" cols="50" id="messageInput"></textarea>
+            <input type="button" class="send-input" id="sendButton" value="Post" />
+
         </div>
     </div>
-    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
-    <script src="~/js/commonchat.js"></script>
+
 </div>
+
+
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/commonchat.js"></script>

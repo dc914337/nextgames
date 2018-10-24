@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using ngchat.Services.Messages;
+using ngchat.Models.ViewModels;
 
 namespace ngchat.Hubs {
     public class CommonChatHub : Hub {
@@ -32,10 +33,10 @@ namespace ngchat.Hubs {
             }
         }
 
-        public async Task GetMessageHistory(DateTime from) {
+        public async Task<ICollection<WallMessage>> GetMessageHistory(DateTime from) {
             var utcStartFrom = from.ToUniversalTime();
             var messages = await MessagesStorage.GetHistoryAsync(utcStartFrom);
-
+            return messages.Select(a => new WallMessage() { Username = a.Sender.Username, Message = a.Message }).ToList();
         }
 
         private async Task NotifyNewMessage(Models.MessageContract newMessage) {

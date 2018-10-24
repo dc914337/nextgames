@@ -23,8 +23,9 @@ namespace ngchat.Services.Messages {
         public string ChatName { get; }
 
         async Task<IEnumerable<MessageContract>> IMessagesStorage.GetHistoryAsync(DateTime from) {
+            var fromKey = from.ToFileTime().ToString();
             var query = new TableQuery<Message>().
-                Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, from.ToFileTime().ToString()));
+                Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, fromKey));
 
             //todo: extract into a generic method
             var results = new List<Message>();
@@ -40,7 +41,7 @@ namespace ngchat.Services.Messages {
                 Message = a.Text,
                 Sender = new UserContract {
                     UserGUID = a.UserId,
-                    Username = a.Username
+                    Username = UsersManager.FindByIdAsync(a.UserId).Result.UserName
                 }
             });
         }
