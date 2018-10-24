@@ -23,6 +23,7 @@ function showOnlineUsers(usernames) {
 
 connection.on("ReceiveMessage", function (user, message) {
     showNextMessage(user, message);
+    $('html, body').scrollTop($(document).height());
 });
 
 connection.on("ReceiveOnlineList", function (users) {
@@ -47,7 +48,7 @@ connection.start().then(function () {
     }
     ).catch(err => console.error(err.toString()));
 
-    ping();
+    //ping(); //no need to ping, we just connected, server knows that we are active
     setInterval(ping, ping_timeout);
     
 }).catch(function (err) {
@@ -57,5 +58,8 @@ connection.start().then(function () {
 
 
 function ping() {
-    showOnlineUsers(["efge", "eg3g", "3f3g3"]);
+    console.log("ping");
+    connection.invoke("Ping").catch(function (err) {
+        return console.error(err.toString());
+    });
 }

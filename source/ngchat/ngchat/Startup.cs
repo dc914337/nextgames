@@ -16,7 +16,7 @@ using ngchat.Hubs;
 using ngchat.Services.Messages;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage;
-
+using ngchat.Services.OnlineStatus;
 
 namespace ngchat {
     public class Startup {
@@ -39,52 +39,54 @@ namespace ngchat {
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-
-
-
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
-
-
-            //var RoleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            
             services.AddTransient<UserManager<IdentityUser>>();
 
-            services.AddTransient<CloudTable>(s => {
+            services.AddTransient<IMessagesStorage, AzureMessageStorage>(sp => {
                 var tableClient = CloudStorageAccount.Parse(Configuration.GetConnectionString("TableStorageConnectionString")).CreateCloudTableClient();
                 var cloudTable = tableClient.GetTableReference("chats");
-                cloudTable.CreateIfNotExistsAsync();
-                return cloudTable;
+                cloudTable.CreateIfNotExistsAsync();//todo: no need to call it every time
+                return new AzureMessageStorage(sp.GetService<UserManager<IdentityUser>>(), cloudTable);
             });
-            services.AddTransient<IMessagesStorage, AzureMessageStorage>();
+
+            services.AddTransient<IOnlineStorage, AzureOnlineStorage>(sp => {
+                var tableClient = CloudStorageAccount.Parse(Configuration.GetConnectionString("TableStorageConnectionString")).CreateCloudTableClient();
+                var cloudTable = tableClient.GetTableReference("online");
+                cloudTable.CreateIfNotExistsAsync();//todo: no need to call it every time
+                return new AzureOnlineStorage(sp.GetService<UserManager<IdentityUser>>(), cloudTable);
+            });
+            
             services.AddSignalR();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
-            if (env.IsDevelopment()) {
-                app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
-            } else {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseCookiePolicy();
-
-            app.UseAuthentication();
-
-            app.UseMvc(routes => {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-
-            app.UseSignalR(routes => {
-                routes.MapHub<CommonChatHub>("/commonChatHub");
-            });
-
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
+        if (env.IsDevelopment()) {
+            app.UseDeveloperExceptionPage();
+            app.UseDatabaseErrorPage();
+        } else {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
         }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseCookiePolicy();
+
+        app.UseAuthentication();
+
+        app.UseMvc(routes => {
+            routes.MapRoute(
+                name: "default",
+                template: "{controller=Home}/{action=Index}/{id?}");
+        });
+
+        app.UseSignalR(routes => {
+            routes.MapHub<CommonChatHub>("/commonChatHub");
+        });
+
     }
+}
 }

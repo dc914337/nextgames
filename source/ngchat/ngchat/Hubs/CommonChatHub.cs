@@ -8,14 +8,17 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using ngchat.Services.Messages;
 using ngchat.Models.ViewModels;
+using ngchat.Services.OnlineStatus;
 
 namespace ngchat.Hubs {
     public class CommonChatHub : Hub {
         private readonly string CHAT_ID = "mainChat";
         public IMessagesStorage MessagesStorage { get; }
+        public IOnlineStorage OnlineStorage { get; }
 
-        public CommonChatHub(IMessagesStorage messagesStorage) {
+        public CommonChatHub(IMessagesStorage messagesStorage, IOnlineStorage onlineStorage) {
             MessagesStorage = messagesStorage;
+            OnlineStorage = onlineStorage;
         }
 
         public async Task SendMessage(string message) {
@@ -31,6 +34,7 @@ namespace ngchat.Hubs {
             if (await MessagesStorage.SaveMessageAsync(newMessage)) {
                 await NotifyNewMessage(newMessage);
             }
+            await Ping();
         }
 
         public async Task<ICollection<WallMessage>> GetMessageHistory(DateTime from) {
@@ -43,19 +47,31 @@ namespace ngchat.Hubs {
             await Clients.All.SendAsync("ReceiveMessage", newMessage.Sender.Username, newMessage.Message);
         }
 
+        public async Task Ping() {
+            await OnlineStorage.RegisterActivityAsync(new Models.UserContract() {
+                Username = Context.User.Identity.Name,
+                UserGUID = Context.UserIdentifier
+            },
+            DateTime.Now,
+            CHAT_ID
+            );
+        }
 
         public override async Task OnConnectedAsync() {
+            await Ping();
+            await NotifyNewOnline();
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception ex) {
-            await base.OnDisconnectedAsync(ex); //check that it is guaranteed// timeout
+            await Ping();
+            await NotifyNewOnline();
+            await base.OnDisconnectedAsync(ex);
         }
 
         private async Task NotifyNewOnline() {
-            var usernames = Context.User.Identities.Select(a => a.Name.ToString()).ToList();
-            string.Join(", ", usernames);
-            await Clients.All.SendAsync("ReceiveConnected", usernames);
+            var usernames = ( await OnlineStorage.GetOnlineUsersAsync(DateTime.Now) ).Select(a => a.Username);
+            await Clients.All.SendAsync("ReceiveOnlineList", usernames);
         }
 
 
