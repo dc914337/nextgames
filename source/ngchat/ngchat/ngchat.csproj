@@ -16,4 +16,8 @@
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\OnlineStatus\" />
+  </ItemGroup>
+
 </Project>

@@ -13,6 +13,10 @@ using ngchat.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ngchat.Hubs;
+using ngchat.Services.Messages;
+using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage;
+
 
 namespace ngchat {
     public class Startup {
@@ -36,10 +40,23 @@ namespace ngchat {
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
+
+
+            //var RoleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            services.AddTransient<UserManager<IdentityUser>>();
+
+            services.AddTransient<CloudTable>(s => {
+                var tableClient = CloudStorageAccount.Parse(Configuration.GetConnectionString("TableStorageConnectionString")).CreateCloudTableClient();
+                var cloudTable = tableClient.GetTableReference("chats");
+                cloudTable.CreateIfNotExistsAsync();
+                return cloudTable;
+            });
+            services.AddTransient<IMessagesStorage, AzureMessageStorage>();
             services.AddSignalR();
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

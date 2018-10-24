@@ -6,32 +6,49 @@ using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using ngchat.Services.Messages;
 
 namespace ngchat.Hubs {
     public class CommonChatHub : Hub {
+        private readonly string CHAT_ID = "mainChat";
+        public IMessagesStorage MessagesStorage { get; }
+
+        public CommonChatHub(IMessagesStorage messagesStorage) {
+            MessagesStorage = messagesStorage;
+        }
+
         public async Task SendMessage(string message) {
-            var username = Context.User.Identity.Name;
-            await Clients.All.SendAsync("ReceiveMessage", username, message);
+            var newMessage = new Models.MessageContract {
+                Message = message,
+                Created = DateTime.Now,
+                ChatId = CHAT_ID,
+                Sender = new Models.UserContract {
+                    Username = Context.User.Identity.Name,
+                    UserGUID = Context.UserIdentifier,
+                }
+            };
+            if (await MessagesStorage.SaveMessageAsync(newMessage)) {
+                await NotifyNewMessage(newMessage);
+            }
         }
 
-        public async Task GetMessageHistory() {
+        public async Task GetMessageHistory(DateTime from) {
+            var utcStartFrom = from.ToUniversalTime();
+            var messages = await MessagesStorage.GetHistoryAsync(utcStartFrom);
 
         }
+
+        private async Task NotifyNewMessage(Models.MessageContract newMessage) {
+            await Clients.All.SendAsync("ReceiveMessage", newMessage.Sender.Username, newMessage.Message);
+        }
+
 
         public override async Task OnConnectedAsync() {
             await base.OnConnectedAsync();
-            
         }
 
         public override async Task OnDisconnectedAsync(Exception ex) {
-            await base.OnDisconnectedAsync(ex);
-            
-        }
-        
-        private async Task NotifyNewMessage() {
-            var usernames = Context.User.Identities.Select(a => a.Name.ToString()).ToList();
-            string.Join(", ", usernames);
-            await Clients.All.SendAsync("ReceiveConnected", usernames);
+            await base.OnDisconnectedAsync(ex); //check that it is guaranteed// timeout
         }
 
         private async Task NotifyNewOnline() {
