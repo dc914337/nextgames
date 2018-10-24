@@ -10,7 +10,7 @@ using ngchat.Models.AzureTableModels;
 
 namespace ngchat.Services.OnlineStatus {
     public class AzureOnlineStorage : IOnlineStorage {
-        const int THRESHOLD_ONLINE_SECONDS = 5; // how long do we consider user to be alive after he was active
+        const int THRESHOLD_ONLINE_SECONDS = 4; // how long do we consider user to be alive after he was active
         public AzureOnlineStorage(
             UserManager<IdentityUser> usersManager,
             CloudTable onlineTable) {

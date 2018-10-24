@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Identity;
 using ngchat.Services.Messages;
 using ngchat.Models.ViewModels;
 using ngchat.Services.OnlineStatus;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ngchat.Hubs {
 
+    [Authorize]
     public class CommonChatHub : Hub {
         private readonly string CHAT_ID = "mainChat";
         public IMessagesStorage MessagesStorage { get; }
