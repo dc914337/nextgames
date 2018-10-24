@@ -23,7 +23,7 @@ namespace ngchat.Services.Messages {
         public string ChatName { get; }
 
         async Task<IEnumerable<MessageContract>> IMessagesStorage.GetHistoryAsync(DateTime from) {
-            var fromKey = from.ToFileTime().ToString();
+            var fromKey = from.ToUniversalTime().ToFileTime().ToString();
             var query = new TableQuery<Message>().
                 Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, fromKey));
 

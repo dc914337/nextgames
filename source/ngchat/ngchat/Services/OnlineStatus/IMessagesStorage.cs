@@ -8,7 +8,8 @@ namespace ngchat.Services.OnlineStatus {
     public interface IOnlineStorage {
         Task<IEnumerable<UserContract>> GetOnlineUsersAsync(DateTime forTime);
         Task<bool> RegisterActivityAsync(UserContract pinged, DateTime time, string presenseContextId);
-
+        Task SetUserConnectedAsync(UserContract user, DateTime now, string presenseContextId);
+        Task SetUserDisconnectedAsync(UserContract user, DateTime now, string presenseContextId);
     }
 
 }

@@ -25,5 +25,7 @@ namespace ngchat.Models.AzureTableModels {
             }
         }
 
+        public int Connections { get; set; } //counting how many connections does the user have
+
     }
 }

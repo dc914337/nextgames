@@ -38,8 +38,7 @@ namespace ngchat.Hubs {
         }
 
         public async Task<ICollection<WallMessage>> GetMessageHistory(DateTime from) {
-            var utcStartFrom = from.ToUniversalTime();
-            var messages = await MessagesStorage.GetHistoryAsync(utcStartFrom);
+            var messages = await MessagesStorage.GetHistoryAsync(from);
             return messages.Select(a => new WallMessage() { Username = a.Sender.Username, Message = a.Message }).ToList();
         }
 
@@ -52,24 +51,31 @@ namespace ngchat.Hubs {
                 Username = Context.User.Identity.Name,
                 UserGUID = Context.UserIdentifier
             },
-            DateTime.Now,
-            CHAT_ID
-            );
+           DateTime.Now,
+           CHAT_ID
+           );
         }
 
         public override async Task OnConnectedAsync() {
-            await Ping();
-            await NotifyNewOnline();
+            await OnlineStorage.SetUserConnectedAsync(new Models.UserContract() {
+                Username = Context.User.Identity.Name,
+                UserGUID = Context.UserIdentifier
+            }, DateTime.Now, CHAT_ID);
+            await NotifyOnlineChanged();
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception ex) {
-            await Ping();
-            await NotifyNewOnline();
-            await base.OnDisconnectedAsync(ex);
+            await OnlineStorage.SetUserDisconnectedAsync(new Models.UserContract() {
+                Username = Context.User.Identity.Name,
+                UserGUID = Context.UserIdentifier
+            }, DateTime.Now, CHAT_ID);
+            await NotifyOnlineChanged();
+            await base.OnConnectedAsync();
         }
 
-        private async Task NotifyNewOnline() {
+
+        private async Task NotifyOnlineChanged() {
             var usernames = ( await OnlineStorage.GetOnlineUsersAsync(DateTime.Now) ).Select(a => a.Username);
             await Clients.All.SendAsync("ReceiveOnlineList", usernames);
         }

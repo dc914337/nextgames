@@ -26,7 +26,8 @@ namespace ngchat.Services.OnlineStatus {
                 Where(TableQuery.GenerateFilterConditionForDate(
                     "Timestamp",
                     QueryComparisons.GreaterThanOrEqual,
-                    forTime.AddSeconds(-THRESHOLD_ONLINE_SECONDS)));
+                    forTime.AddSeconds(-THRESHOLD_ONLINE_SECONDS))
+                );
 
             //todo: extract into a generic method
             var results = new List<Models.AzureTableModels.OnlineStatus>();
@@ -48,20 +49,51 @@ namespace ngchat.Services.OnlineStatus {
                 Username = UsersManager.FindByIdAsync(a.First().UserId).Result.UserName
             });
         }
+
         public async Task<bool> RegisterActivityAsync(UserContract pinged, DateTime time, string presenseContextId) {
-            var insertOperation = TableOperation.InsertOrReplace(new Models.AzureTableModels.OnlineStatus() {
-                PresenseContext = presenseContextId,
-                UserId = pinged.UserGUID,
-                Timestamp = time.ToUniversalTime()
-            });
+            return await UpdateEnterAsync(pinged, 0, time, presenseContextId);
+        }
+
+
+        public async Task SetUserConnectedAsync(UserContract user, DateTime now, string presenseContextId) {
+            await UpdateEnterAsync(user, 1, now, presenseContextId);
+        }
+
+
+        public async Task SetUserDisconnectedAsync(UserContract user, DateTime now, string presenseContextId) {
+            await UpdateEnterAsync(user, -1, now, presenseContextId);
+        }
+
+        private async Task<bool> UpdateEnterAsync(UserContract user, int changeEnters, DateTime now, string presenseContextId) {
+            Models.AzureTableModels.OnlineStatus userToChange;
+            try {
+                TableResult retrievedResult = await OnlinePresenseTable.ExecuteAsync(TableOperation.Retrieve<Models.AzureTableModels.OnlineStatus>(presenseContextId, user.UserGUID));
+                userToChange = (Models.AzureTableModels.OnlineStatus)retrievedResult.Result;
+            } catch (StorageException ex) {
+                return false;
+            }
+
+            //check if null
+            if (userToChange == null) {
+                userToChange = new Models.AzureTableModels.OnlineStatus() {
+                    PresenseContext = presenseContextId,
+                    UserId = user.UserGUID,
+                    Timestamp = now.ToUniversalTime(),
+                    Connections = changeEnters < 0 ? 0 : changeEnters
+                };
+            } else {
+                userToChange.Connections += changeEnters;
+                userToChange.Timestamp = now.ToUniversalTime();
+            }
+
+            var insertOperation = TableOperation.InsertOrReplace(userToChange);
             TableResult res;
             try {
                 res = await OnlinePresenseTable.ExecuteAsync(insertOperation);
             } catch (StorageException ex) {
                 return false;
             }
-            return true; //todo: check status code
+            return true;
         }
-
     }
 }
