@@ -46,7 +46,7 @@ namespace ngchat.Services.OnlineStatus {
             return results.GroupBy(a => a.UserId).Select(a => new UserContract {
                 UserGUID = a.First().UserId,
                 Username = UsersManager.FindByIdAsync(a.First().UserId).Result.UserName
-            });
+            }).ToList();
         }
         public async Task<bool> RegisterActivityAsync(UserContract pinged, DateTime time, string presenseContextId) {
             var insertOperation = TableOperation.InsertOrReplace(new Models.AzureTableModels.OnlineStatus() {

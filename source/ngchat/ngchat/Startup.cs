@@ -17,6 +17,7 @@ using ngchat.Services.Messages;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage;
 using ngchat.Services.OnlineStatus;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ngchat {
     public class Startup {
@@ -39,9 +40,9 @@ namespace ngchat {
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-            
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            
+
             services.AddTransient<UserManager<IdentityUser>>();
 
             services.AddTransient<IMessagesStorage, AzureMessageStorage>(sp => {
@@ -57,36 +58,38 @@ namespace ngchat {
                 cloudTable.CreateIfNotExistsAsync();//todo: no need to call it every time
                 return new AzureOnlineStorage(sp.GetService<UserManager<IdentityUser>>(), cloudTable);
             });
-            
+
             services.AddSignalR();
+            
+            services.AddHostedService<ServerOnlineNotificationTimer>();
         }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
-        if (env.IsDevelopment()) {
-            app.UseDeveloperExceptionPage();
-            app.UseDatabaseErrorPage();
-        } else {
-            app.UseExceptionHandler("/Home/Error");
-            app.UseHsts();
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
+            if (env.IsDevelopment()) {
+                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+            } else {
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+            app.UseCookiePolicy();
+
+            app.UseAuthentication();
+
+            app.UseMvc(routes => {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+            });
+
+            app.UseSignalR(routes => {
+                routes.MapHub<CommonChatHub>("/commonChatHub");
+            });
+
         }
-
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
-        app.UseCookiePolicy();
-
-        app.UseAuthentication();
-
-        app.UseMvc(routes => {
-            routes.MapRoute(
-                name: "default",
-                template: "{controller=Home}/{action=Index}/{id?}");
-        });
-
-        app.UseSignalR(routes => {
-            routes.MapHub<CommonChatHub>("/commonChatHub");
-        });
-
     }
-}
 }

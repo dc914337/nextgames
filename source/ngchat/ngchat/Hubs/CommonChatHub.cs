@@ -11,6 +11,7 @@ using ngchat.Models.ViewModels;
 using ngchat.Services.OnlineStatus;
 
 namespace ngchat.Hubs {
+
     public class CommonChatHub : Hub {
         private readonly string CHAT_ID = "mainChat";
         public IMessagesStorage MessagesStorage { get; }
